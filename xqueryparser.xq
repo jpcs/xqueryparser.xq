@@ -103,6 +103,27 @@ declare (: private :) function _simplify($nodes)
       case element(EQName) return _process_skip($n)
       case element(FunctionName) return _process_skip($n)
 
+      case element(PredefinedEntityRef) return
+        element { fn:node-name($n) } {
+          attribute value { _unescape_helper($n,"") },
+          $n/node()
+        }
+      case element(CharRef) return
+        element { fn:node-name($n) } {
+          attribute value { _unescape_helper($n,"") },
+          $n/node()
+        }
+      case element(StringLiteral) return
+        element { fn:node-name($n) } {
+          attribute value { _unescape_string($n) },
+          $n/node()
+        }
+      case element(URILiteral) return
+        element { fn:node-name($n) } {
+          attribute value { fn:normalize-space(_unescape_string($n)) },
+          $n/node()
+        }
+
       default return _process_copy($n)
     default return $n
 };
@@ -125,8 +146,6 @@ declare (: private :) function _process_copy($n)
 declare (: private :) function _combine($node, $group)
 {
   typeswitch($node)
-    case empty-sequence() return 
-      _combine_group($group)
     case element() return typeswitch($node)
       case element(QuotAttrContentChar) return
         _combine($node/following-sibling::node()[1],($group,$node))
@@ -134,38 +153,6 @@ declare (: private :) function _combine($node, $group)
         _combine($node/following-sibling::node()[1],($group,$node))
       case element(ElementContentChar) return
         _combine($node/following-sibling::node()[1],($group,$node))
-      case element(PredefinedEntityRef) return (
-        _combine_group($group),
-        element { fn:node-name($node) } {
-          attribute value { _unescape_helper($node,"") },
-          $node/node()
-        },
-        _combine($node/following-sibling::node()[1],())
-      )
-      case element(CharRef) return (
-        _combine_group($group),
-        element { fn:node-name($node) } {
-          attribute value { _unescape_helper($node,"") },
-          $node/node()
-        },
-        _combine($node/following-sibling::node()[1],())
-      )
-      case element(StringLiteral) return (
-        _combine_group($group),
-        element { fn:node-name($node) } {
-          attribute value { _unescape_string($node) },
-          $node/node()
-        },
-        _combine($node/following-sibling::node()[1],())
-      )
-      case element(URILiteral) return (
-        _combine_group($group),
-        element { fn:node-name($node) } {
-          attribute value { fn:normalize-space(_unescape_string($node)) },
-          $node/node()
-        },
-        _combine($node/following-sibling::node()[1],())
-      )
       default return (
         _combine_group($group),
         element { fn:node-name($node) } {
@@ -174,11 +161,13 @@ declare (: private :) function _combine($node, $group)
         },
         _combine($node/following-sibling::node()[1],())
       )
-    default return (
+    case node() return (
       _combine_group($group),
       $node,
       _combine($node/following-sibling::node()[1],())
     )
+    default return
+      _combine_group($group)
 };
 
 declare (: private :) function _combine_group($group)
