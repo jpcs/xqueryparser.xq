@@ -22,7 +22,6 @@ xquery version "1.0";
  :  @since Feb 17, 2012
  :  @version 0.1
  :)
-
 module namespace xqp="http://github.com/jpcs/xqueryparser";
 declare default function namespace "http://github.com/jpcs/xqueryparser";
 
@@ -54,55 +53,57 @@ declare (: private :) function _simplify($nodes)
 {
   for $n in $nodes
   return typeswitch($n)
-    case element(EOF) return ()
-    case element(MainModuleSequence) return _process_skip($n)
-    case element(Setter) return _process_skip($n)
-    case element(Import) return _process_skip($n)
-    case element(QueryBody) return _process_skip($n)
-    case element(Expr) return _process_skip($n)
-    case element(ExprSingle) return _process_skip($n)
-    case element(EnclosedExprExtended) return _process_skip($n)
-    case element(InitialClause) return _process_skip($n)
-    case element(IntermediateClause) return _process_skip($n)
-    case element(OrExpr) return _process_skip($n)
-    case element(AndExpr) return _process_skip($n)
-    case element(ComparisonExpr) return _process_skip($n)
-    case element(StringConcatExpr) return _process_skip($n)
-    case element(RangeExpr) return _process_skip($n)
-    case element(AdditiveExpr) return _process_skip($n)
-    case element(MultiplicativeExpr) return _process_skip($n)
-    case element(UnionExpr) return _process_skip($n)
-    case element(IntersectExceptExpr) return _process_skip($n)
-    case element(InstanceofExpr) return _process_skip($n)
-    case element(TreatExpr) return _process_skip($n)
-    case element(CastableExpr) return _process_skip($n)
-    case element(CastExpr) return _process_skip($n)
-    case element(UnaryExpr) return _process_skip($n)
-    case element(ValueExpr) return _process_skip($n)
-    case element(PathExpr) return _process_skip($n)
-    case element(RelativePathExpr) return _process_skip($n)
-    case element(StepExpr) return _process_skip($n)
-    case element(NodeTest) return _process_skip($n)
-    case element(PostfixExpr) return _process_skip($n)
-    case element(PredicateList) return _process_skip($n)
-    case element(PrimaryExpr) return _process_skip($n)
-    case element(Literal) return _process_skip($n)
-    case element(NumericLiteral) return _process_skip($n)
-    case element(Argument) return _process_skip($n)
-    case element(Constructor) return _process_skip($n)
-    case element(DirectConstructor) return _process_skip($n)
-    case element(QuotAttrValueContent) return _process_skip($n)
-    case element(AposAttrValueContent) return _process_skip($n)
-    case element(DirElemContent) return _process_skip($n)
-    case element(CommonContent) return _process_skip($n)
-    case element(ComputedConstructor) return _process_skip($n)
-    case element(ItemType) return _process_skip($n)
-    case element(KindTest) return _process_skip($n)
+    case element() return
+      typeswitch($n)
+      case element(EOF) return ()
+      case element(MainModuleSequence) return _process_skip($n)
+      case element(Setter) return _process_skip($n)
+      case element(Import) return _process_skip($n)
+      case element(QueryBody) return _process_skip($n)
+      case element(Expr) return _process_skip($n)
+      case element(ExprSingle) return _process_skip($n)
+      case element(EnclosedExprExtended) return _process_skip($n)
+      case element(InitialClause) return _process_skip($n)
+      case element(IntermediateClause) return _process_skip($n)
+      case element(OrExpr) return _process_skip($n)
+      case element(AndExpr) return _process_skip($n)
+      case element(ComparisonExpr) return _process_skip($n)
+      case element(StringConcatExpr) return _process_skip($n)
+      case element(RangeExpr) return _process_skip($n)
+      case element(AdditiveExpr) return _process_skip($n)
+      case element(MultiplicativeExpr) return _process_skip($n)
+      case element(UnionExpr) return _process_skip($n)
+      case element(IntersectExceptExpr) return _process_skip($n)
+      case element(InstanceofExpr) return _process_skip($n)
+      case element(TreatExpr) return _process_skip($n)
+      case element(CastableExpr) return _process_skip($n)
+      case element(CastExpr) return _process_skip($n)
+      case element(UnaryExpr) return _process_skip($n)
+      case element(ValueExpr) return _process_skip($n)
+      case element(PathExpr) return _process_skip($n)
+      case element(RelativePathExpr) return _process_skip($n)
+      case element(StepExpr) return _process_skip($n)
+      case element(NodeTest) return _process_skip($n)
+      case element(PostfixExpr) return _process_skip($n)
+      case element(PredicateList) return _process_skip($n)
+      case element(PrimaryExpr) return _process_skip($n)
+      case element(Literal) return _process_skip($n)
+      case element(NumericLiteral) return _process_skip($n)
+      case element(Argument) return _process_skip($n)
+      case element(Constructor) return _process_skip($n)
+      case element(DirectConstructor) return _process_skip($n)
+      case element(QuotAttrValueContent) return _process_skip($n)
+      case element(AposAttrValueContent) return _process_skip($n)
+      case element(DirElemContent) return _process_skip($n)
+      case element(CommonContent) return _process_skip($n)
+      case element(ComputedConstructor) return _process_skip($n)
+      case element(ItemType) return _process_skip($n)
+      case element(KindTest) return _process_skip($n)
 
-    case element(EQName) return _process_skip($n)
-    case element(FunctionName) return _process_skip($n)
+      case element(EQName) return _process_skip($n)
+      case element(FunctionName) return _process_skip($n)
 
-    case element() return _process_copy($n)
+      default return _process_copy($n)
     default return $n
 };
 
@@ -126,53 +127,53 @@ declare (: private :) function _combine($node, $group)
   typeswitch($node)
     case empty-sequence() return 
       _combine_group($group)
-
-    case element(QuotAttrContentChar) return
-      _combine($node/following-sibling::node()[1],($group,$node))
-    case element(AposAttrContentChar) return
-      _combine($node/following-sibling::node()[1],($group,$node))
-    case element(ElementContentChar) return
-      _combine($node/following-sibling::node()[1],($group,$node))
-    case element(PredefinedEntityRef) return (
-      _combine_group($group),
-      element { fn:node-name($node) } {
-        attribute value { _unescape_helper($node,"") },
-        $node/node()
-      },
-      _combine($node/following-sibling::node()[1],())
-    )
-    case element(CharRef) return (
-      _combine_group($group),
-      element { fn:node-name($node) } {
-        attribute value { _unescape_helper($node,"") },
-        $node/node()
-      },
-      _combine($node/following-sibling::node()[1],())
-    )
-    case element(StringLiteral) return (
-      _combine_group($group),
-      element { fn:node-name($node) } {
-        attribute value { _unescape_string($node) },
-        $node/node()
-      },
-      _combine($node/following-sibling::node()[1],())
-    )
-    case element(URILiteral) return (
-      _combine_group($group),
-      element { fn:node-name($node) } {
-        attribute value { fn:normalize-space(_unescape_string($node)) },
-        $node/node()
-      },
-      _combine($node/following-sibling::node()[1],())
-    )
-    case element() return (
-      _combine_group($group),
-      element { fn:node-name($node) } {
-        $node/@*,
-        _combine($node/node()[1],())
-      },
-      _combine($node/following-sibling::node()[1],())
-    )
+    case element() return typeswitch($node)
+      case element(QuotAttrContentChar) return
+        _combine($node/following-sibling::node()[1],($group,$node))
+      case element(AposAttrContentChar) return
+        _combine($node/following-sibling::node()[1],($group,$node))
+      case element(ElementContentChar) return
+        _combine($node/following-sibling::node()[1],($group,$node))
+      case element(PredefinedEntityRef) return (
+        _combine_group($group),
+        element { fn:node-name($node) } {
+          attribute value { _unescape_helper($node,"") },
+          $node/node()
+        },
+        _combine($node/following-sibling::node()[1],())
+      )
+      case element(CharRef) return (
+        _combine_group($group),
+        element { fn:node-name($node) } {
+          attribute value { _unescape_helper($node,"") },
+          $node/node()
+        },
+        _combine($node/following-sibling::node()[1],())
+      )
+      case element(StringLiteral) return (
+        _combine_group($group),
+        element { fn:node-name($node) } {
+          attribute value { _unescape_string($node) },
+          $node/node()
+        },
+        _combine($node/following-sibling::node()[1],())
+      )
+      case element(URILiteral) return (
+        _combine_group($group),
+        element { fn:node-name($node) } {
+          attribute value { fn:normalize-space(_unescape_string($node)) },
+          $node/node()
+        },
+        _combine($node/following-sibling::node()[1],())
+      )
+      default return (
+        _combine_group($group),
+        element { fn:node-name($node) } {
+          $node/@*,
+          _combine($node/node()[1],())
+        },
+        _combine($node/following-sibling::node()[1],())
+      )
     default return (
       _combine_group($group),
       $node,
@@ -325,33 +326,34 @@ declare (: private :) function _analyze($nodes, $ns)
 {
   for $n in $nodes
   return typeswitch($n)
-    case element(QName) return
-      element { fn:node-name($n) } {
-        $n/@*, _resolve_qname($n,$ns), $n//text()
-      }
-    case element(FunctionQName) return
-      element { fn:node-name($n) } {
-        $n/@*, _resolve_qname($n,$ns), $n//text()
-      }
-    case element(URIQualifiedName) return
-      element { fn:node-name($n) } {
-        $n/@*,
-        let $parts := fn:tokenize($n,":")
-        let $localname := $parts[fn:last()]
-        let $uri := _unescape_string(fn:string-join($parts[fn:position() < fn:last()],":"))
-        return (
-          attribute prefix { "" },
-          attribute uri { $uri },
-          attribute localname { $localname }
-        ),
-        $n//text()
-      }
-    (: TBD DirAttributeList namespace attrs - jpcs :)
-    case element() return
-      element { fn:node-name($n) } {
-        $n/@*,
-        _analyze($n/node(),$ns)
-      }
+    case element() return typeswitch($n)
+      case element(QName) return
+        element { fn:node-name($n) } {
+          $n/@*, _resolve_qname($n,$ns), $n//text()
+        }
+      case element(FunctionQName) return
+        element { fn:node-name($n) } {
+          $n/@*, _resolve_qname($n,$ns), $n//text()
+        }
+      case element(URIQualifiedName) return
+        element { fn:node-name($n) } {
+          $n/@*,
+          let $parts := fn:tokenize($n,":")
+          let $localname := $parts[fn:last()]
+          let $uri := _unescape_string(fn:string-join($parts[fn:position() < fn:last()],":"))
+          return (
+            attribute prefix { "" },
+            attribute uri { $uri },
+            attribute localname { $localname }
+          ),
+          $n//text()
+        }
+      (: TBD DirAttributeList namespace attrs - jpcs :)
+      default return
+        element { fn:node-name($n) } {
+          $n/@*,
+          _analyze($n/node(),$ns)
+        }
     default return $n
 };
 
