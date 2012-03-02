@@ -11,14 +11,14 @@ Version:  0.1
 
 ## Table of Contents
 
-* Functions: [ parse\#1](#func_ parse_1)
+* Functions: [parse\#1](#func_parse_1)
 
 
 ## Functions
 
-### <a name="func_ parse_1"/>  parse\#1
+### <a name="func_parse_1"/> parse\#1
 ```xquery
- parse($module as xs:string
+parse($module as xs:string
 ) as  element()
 ```
    Parses the XQuery module in the string argument. The module string  is returned marked up in elements, with attributes adding statically  analysed values like unescaped string values, and lexical QNames  resolved to expanded QNames.   
