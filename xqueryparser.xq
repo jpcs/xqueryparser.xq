@@ -180,7 +180,7 @@ declare (: private :) function _combine_group($group)
 (:~ Build the namespace map :)
 declare (: private :) function _build_namespaces($n)
 {
-  let $marklogic := fn:contains($n/Module/VersionDecl/StringLiteral,"-ml")
+  let $marklogic := fn:contains($n/Module/VersionDecl/StringLiteral[1],"-ml")
   let $ns := (
     (: Pre-declared bindings :)
     <ns prefix="xml" uri="http://www.w3.org/XML/1998/namespace"/>,
