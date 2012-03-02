@@ -41,11 +41,11 @@ import module namespace p="XQueryML30" at "lib/XQueryML30.xq";
 declare function parse($module as xs:string) as element()
 {
   let $markup := p:parse-XQuery($module)
-  let $simplify := _simplify($markup)
-  let $combine := _combine($simplify,())
-  let $ns := _build_namespaces($combine)
-  let $analyze := _analyze($combine,$ns)
-  return $analyze
+  let $markup := _simplify($markup)
+  (: let $markup := _combine($markup,()) :) (: Causes stack overflow - jpcs :)
+  let $ns := _build_namespaces($markup)
+  let $markup := _analyze($markup,$ns)
+  return $markup
 };
 
 (:~ Simplify the markup to remove unneeded elements :)
