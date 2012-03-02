@@ -22,8 +22,8 @@ xquery version "1.0";
  :  @since Feb 17, 2012
  :  @version 0.1
  :)
-module namespace xqp="http://github.com/jpcs/xqueryparser";
-declare default function namespace "http://github.com/jpcs/xqueryparser";
+module namespace xqp="http://github.com/jpcs/xqueryparser.xq";
+declare default function namespace "http://github.com/jpcs/xqueryparser.xq";
 
 import module namespace p="XQueryML30" at "lib/XQueryML30.xq";
 

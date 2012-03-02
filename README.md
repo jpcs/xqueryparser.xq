@@ -1,4 +1,4 @@
-# library module: http://github.com/jpcs/xqueryparser
+# library module: http://github.com/jpcs/xqueryparser.xq
    
 # xqueryparser.xq  
 

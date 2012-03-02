@@ -1,6 +1,6 @@
 xquery version "1.0";
 
-import module namespace xqp="http://github.com/jpcs/xqueryparser" at "../xqueryparser.xq";
+import module namespace xqp="http://github.com/jpcs/xqueryparser.xq" at "../xqueryparser.xq";
 
 xqp:parse("xquery version '1.0';
 module namespace a='foo&amp;lt;';
