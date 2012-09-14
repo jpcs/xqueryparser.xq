@@ -1,4 +1,4 @@
-xquery version "1.0";
+xquery version "1.0-ml";
 
 (:
  : Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,38 +14,90 @@ xquery version "1.0";
  : limitations under the License.
  :)
 
-(:~ 
+(:~
  : <h1>xqueryparser.xq</h1>
  : <p>An parser for XQuery 3.0 and MarkLogic extensions.</p>
- : 
+ :
  :  @author John Snelson
  :  @since Feb 17, 2012
  :  @version 0.1
  :)
 module namespace xqp="http://github.com/jpcs/xqueryparser.xq";
-declare default function namespace "http://github.com/jpcs/xqueryparser.xq";
+
+declare namespace xdmp="http://marklogic.com/xdmp" ;
 
 import module namespace p="XQueryML30" at "lib/XQueryML30.xq";
 
-(:~ 
+declare variable $NL := fn:codepoints-to-string(10) ;
+declare variable $LINENO := 1;
+
+(:~
  : Parses the XQuery module in the string argument. The module string
  : is returned marked up in elements, with attributes adding statically
  : analysed values like unescaped string values, and lexical QNames
  : resolved to expanded QNames.
  :
  : @param $module: XQuery module passed as a string
- : 
+ :
  : @return A marked up copy of the XQuery module, or an error element
  : detailing the parse error encountered.
  :)
 declare function parse($module as xs:string) as element()
 {
   let $markup := p:parse-XQuery($module)
+  let $markup := _lineno($markup)
   let $markup := _simplify($markup)
   (: let $markup := _combine($markup,()) :) (: Causes stack overflow - jpcs :)
   let $ns := _build_namespaces($markup)
   let $markup := _analyze($markup,$ns)
   return $markup
+};
+
+(:~ Mutate state of LINENO.
+ : Before _simplify, any newlines will precede a token or a concrete literal.
+ :)
+declare (:private:) function _lineno_set($e as element())
+{
+  xdmp:set(
+    $LINENO,
+    $LINENO + fn:string-length(
+      fn:replace(
+        $e/preceding::text()[1],
+        '[^\n]+', '')))
+};
+
+(:~ Construct a line number attribute. :)
+declare (:private:) function _lineno_attr()
+{
+  attribute line { $LINENO }
+};
+
+declare (:private:) function _lineno_rewrite($e as element())
+{
+  element { fn:node-name($e) } {
+    $e/@*,
+    _lineno_set($e),
+    _lineno_attr(),
+    $e/node() }
+};
+
+declare (:private:) function _lineno($n as node())
+{
+  typeswitch($n)
+  case element(XQuery) return (
+    xdmp:set($LINENO, 1),
+    element XQuery { $n/@*, _lineno($n/node()) })
+  case element(DecimalLiteral) return _lineno_rewrite($n)
+  case element(DoubleLiteral) return _lineno_rewrite($n)
+  case element(IntegerLiteral) return _lineno_rewrite($n)
+  case element(QName) return _lineno_rewrite($n)
+  case element(StringLiteral) return _lineno_rewrite($n)
+  case element(TOKEN) return _lineno_rewrite($n)
+  case element(URILiteral) return _lineno_rewrite($n)
+  case element() return element { fn:node-name($n) } {
+    $n/@*,
+    _lineno($n/node()) }
+  default return $n
 };
 
 (:~ Simplify the markup to remove unneeded elements :)
@@ -105,21 +157,25 @@ declare (: private :) function _simplify($nodes)
 
       case element(PredefinedEntityRef) return
         element { fn:node-name($n) } {
+          $n/@*,
           attribute value { _unescape_helper($n,"") },
           $n/node()
         }
       case element(CharRef) return
         element { fn:node-name($n) } {
+          $n/@*,
           attribute value { _unescape_helper($n,"") },
           $n/node()
         }
       case element(StringLiteral) return
         element { fn:node-name($n) } {
+          $n/@*,
           attribute value { _unescape_string($n) },
           $n/node()
         }
       case element(URILiteral) return
         element { fn:node-name($n) } {
+          $n/@*,
           attribute value { fn:normalize-space(_unescape_string($n)) },
           $n/node()
         }
@@ -318,11 +374,11 @@ declare (: private :) function _analyze($nodes, $ns)
     case element() return typeswitch($n)
       case element(QName) return
         element { fn:node-name($n) } {
-          $n/@*, _resolve_qname($n,$ns), $n//text()
+          $n/@*, _resolve_qname($n,$ns), $n/node()
         }
       case element(FunctionQName) return
         element { fn:node-name($n) } {
-          $n/@*, _resolve_qname($n,$ns), $n//text()
+          $n/@*, _resolve_qname($n,$ns), $n/node()
         }
       case element(URIQualifiedName) return
         element { fn:node-name($n) } {
@@ -335,7 +391,7 @@ declare (: private :) function _analyze($nodes, $ns)
             attribute uri { $uri },
             attribute localname { $localname }
           ),
-          $n//text()
+          $n/node()
         }
       (: TBD DirAttributeList namespace attrs - jpcs :)
       default return
