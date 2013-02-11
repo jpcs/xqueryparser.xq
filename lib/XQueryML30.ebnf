@@ -11,7 +11,7 @@ LibraryModule
          ::= ModuleDecl Prolog
 ModuleDecl
          ::= 'module' 'namespace' NCName '=' URILiteral Separator
-Prolog   ::= ( ( DefaultNamespaceDecl | Setter | NamespaceDecl | Import ) Separator )* ( ( ContextItemDecl | AnnotatedDecl | OptionDecl ) Separator )*
+Prolog   ::= ( ( DefaultNamespaceDecl | Setter | NamespaceDecl | Import | FTOptionDecl ) Separator )* ( ( ContextItemDecl | AnnotatedDecl | OptionDecl ) Separator )*
 Separator
          ::= ';'
 Setter   ::= BoundarySpaceDecl
@@ -20,6 +20,7 @@ Setter   ::= BoundarySpaceDecl
            | ConstructionDecl
            | OrderingModeDecl
            | EmptyOrderDecl
+           | RevalidationDecl
            | CopyNamespacesDecl
            | DecimalFormatDecl
 BoundarySpaceDecl
@@ -104,6 +105,11 @@ ExprSingle
            | IfExpr
            | OrExpr
            | TryCatchExpr
+           | InsertExpr
+           | DeleteExpr
+           | RenameExpr
+           | ReplaceExpr
+           | TransformExpr
 
 EnclosedExprExtended ::= '{' Expr? '}'
 
@@ -195,8 +201,14 @@ CatchErrorList
          ::= NameTest ( '|' NameTest )*
 OrExpr   ::= AndExpr ( 'or' AndExpr )*
 AndExpr  ::= ComparisonExpr ( 'and' ComparisonExpr )*
-ComparisonExpr
-         ::= StringConcatExpr ( ( ValueComp | GeneralComp | NodeComp ) StringConcatExpr )?
+
+
+ComparisonExpr	   ::=   	FTContainsExpr ( (ValueComp
+    | GeneralComp
+    | NodeComp) FTContainsExpr )?
+FTContainsExpr	   ::=   	StringConcatExpr ( "contains" "text" FTSelection FTIgnoreOption? )?
+
+
 StringConcatExpr ::= RangeExpr ( '||' RangeExpr )*
 RangeExpr
          ::= AdditiveExpr ( 'to' AdditiveExpr )?
@@ -479,6 +491,107 @@ TypedFunctionTest
          ::= 'function' '(' ( SequenceType ( ',' SequenceType )* )? ')' 'as' SequenceType
 ParenthesizedItemType
          ::= '(' ItemType ')'
+
+
+
+
+
+RevalidationDecl
+         ::= 'declare' 'revalidation' ( 'strict' | 'lax' | 'skip' )
+InsertExprTargetChoice
+         ::= ( 'as' ( 'first' | 'last' ) )? 'into'
+           | 'after'
+           | 'before'
+InsertExpr
+         ::= 'insert' ( 'node' | 'nodes' ) SourceExpr InsertExprTargetChoice TargetExpr
+DeleteExpr
+         ::= 'delete' ( 'node' | 'nodes' ) TargetExpr
+ReplaceExpr
+         ::= 'replace' ( 'value' 'of' )? 'node' TargetExpr 'with' ExprSingle
+RenameExpr
+         ::= 'rename' 'node' TargetExpr 'as' NewNameExpr
+SourceExpr
+         ::= ExprSingle
+TargetExpr
+         ::= ExprSingle
+NewNameExpr
+         ::= ExprSingle
+TransformExpr
+         ::= 'copy' '$' VarName ':=' ExprSingle ( ',' '$' VarName ':=' ExprSingle )* 'modify' ExprSingle 'return' ExprSingle
+
+
+
+
+
+
+FTOptionDecl ::= "declare" "ft-option" FTMatchOptions
+
+FTSelection	   ::=   	FTOr FTPosFilter*
+FTWeight	   ::=   	"weight" "{" Expr "}"
+FTOr	   ::=   	FTAnd ( "ftor" FTAnd )*
+FTAnd	   ::=   	FTMildNot ( "ftand" FTMildNot )*
+FTMildNot	   ::=   	FTUnaryNot ( "not" "in" FTUnaryNot )*
+FTUnaryNot	   ::=   	("ftnot")? FTPrimaryWithOptions
+FTPrimaryWithOptions	   ::=   	FTPrimary FTMatchOptions? FTWeight?
+FTPrimary	   ::=   	(FTWords FTTimes?) | ("(" FTSelection ")") | FTExtensionSelection
+FTWords	   ::=   	FTWordsValue FTAnyallOption?
+FTWordsValue	   ::=   	StringLiteral | ("{" Expr "}")
+FTExtensionSelection	   ::=   	Pragma+ "{" FTSelection? "}"
+FTAnyallOption	   ::=   	("any" "word"?) | ("all" "words"?) | "phrase"
+FTTimes	   ::=   	"occurs" FTRange "times"
+FTRange	   ::=   	("exactly" AdditiveExpr)
+    | ("at" "least" AdditiveExpr)
+    | ("at" "most" AdditiveExpr)
+    | ("from" AdditiveExpr "to" AdditiveExpr)
+FTPosFilter	   ::=   	FTOrder | FTWindow | FTDistance | FTScope | FTContent
+FTOrder	   ::=   	"ordered"
+FTWindow	   ::=   	"window" AdditiveExpr FTUnit
+FTDistance	   ::=   	"distance" FTRange FTUnit
+FTUnit	   ::=   	"words" | "sentences" | "paragraphs"
+FTScope	   ::=   	("same" | "different") FTBigUnit
+FTBigUnit	   ::=   	"sentence" | "paragraph"
+FTContent	   ::=   	("at" "start") | ("at" "end") | ("entire" "content")
+FTMatchOptions	   ::=   	("using" FTMatchOption)+
+FTMatchOption	   ::=   	FTLanguageOption
+    | FTWildCardOption
+    | FTThesaurusOption
+    | FTStemOption
+    | FTCaseOption
+    | FTDiacriticsOption
+    | FTStopWordOption
+    | FTExtensionOption
+FTCaseOption	   ::=   	("case" "insensitive")
+    | ("case" "sensitive")
+    | "lowercase"
+    | "uppercase"
+FTDiacriticsOption	   ::=   	("diacritics" "insensitive")
+    | ("diacritics" "sensitive")
+FTStemOption	   ::=   	"stemming" | ("no" "stemming")
+FTThesaurusOption	   ::=   	("thesaurus" (FTThesaurusID | "default"))
+    | ("thesaurus" "(" (FTThesaurusID | "default") ("," FTThesaurusID)* ")")
+    | ("no" "thesaurus")
+FTThesaurusID	   ::=   	"at" URILiteral ("relationship" StringLiteral)? (FTLiteralRange "levels")?
+FTLiteralRange	   ::=   	("exactly" IntegerLiteral)
+    | ("at" "least" IntegerLiteral)
+    | ("at" "most" IntegerLiteral)
+    | ("from" IntegerLiteral "to" IntegerLiteral)
+FTStopWordOption	   ::=   	("stop" "words" FTStopWords FTStopWordsInclExcl*)
+    | ("stop" "words" "default" FTStopWordsInclExcl*)
+    | ("no" "stop" "words")
+FTStopWords	   ::=   	("at" URILiteral)
+    | ("(" StringLiteral ("," StringLiteral)* ")")
+FTStopWordsInclExcl	   ::=   	("union" | "except") FTStopWords
+FTLanguageOption	   ::=   	"language" StringLiteral
+FTWildCardOption	   ::=   	"wildcards" | ("no" "wildcards")
+FTExtensionOption	   ::=   	"option" EQName StringLiteral
+FTIgnoreOption	   ::=   	"without" "content" UnionExpr
+
+
+
+
+
+
+
 EQName   ::= QName | URIQualifiedName
 QName   ::= FunctionQName
            | 'attribute'
@@ -501,6 +614,25 @@ QName   ::= FunctionQName
 FunctionName ::= FunctionQName | URIQualifiedName
 FunctionQName
          ::= QName^Token
+           | 'contains'
+           | 'paragraphs'
+           | 'sentences'
+           | 'times'
+           | 'words'
+           | 'after'
+           | 'as'
+           | 'before'
+           | 'copy'
+           | 'delete'
+           | 'first'
+           | 'insert'
+           | 'into'
+           | 'last'
+           | 'modify'
+           | 'rename'
+           | 'replace'
+           | 'with'
+           | 'private' 
            | 'ancestor'
            | 'ancestor-or-self'
            | 'and'
@@ -566,6 +698,17 @@ FunctionQName
            | 'where'
            | 'xquery'
 NCName   ::= NCName^Token
+           | 'contains'
+           | 'paragraphs'
+           | 'sentences'
+           | 'times'
+           | 'words'
+           | 'after'
+           | 'as'
+           | 'before'
+           | 'into'
+           | 'modify'
+           | 'with' 
            | 'and'
            | 'ascending'
            | 'case'
@@ -714,6 +857,6 @@ CommentContents
            | ( ( [^(:] | '('+ [^(:] | ':'+ [^:)] )+ | ':' ) ':'* & ':'
 '*'       << Wildcard '*'^OccurrenceIndicator
 QName^Token
-          << 'private' 'ancestor' 'ancestor-or-self' 'and' 'ascending' 'attribute' 'binary' 'catch' 'case' 'cast' 'castable' 'child' 'collation' 'comment' 'count' 'declare' 'default' 'descendant' 'descendant-or-self' 'descending' 'div' 'document' 'document-node' 'element' 'else' 'empty' 'empty-sequence' 'end' 'eq' 'every' 'except' 'following' 'following-sibling' 'for' 'function' 'ge' 'group' 'gt' 'idiv' 'if' 'import' 'instance' 'intersect' 'is' 'item' 'le' 'let' 'lt' 'mod' 'module' 'namespace' 'namespace-node' 'ne' 'node' 'only' 'or' 'order' 'ordered' 'parent' 'preceding' 'preceding-sibling' 'processing-instruction' 'property' 'return' 'satisfies' 'schema-attribute' 'schema-element' 'self' 'some' 'stable' 'start' 'switch' 'text' 'to' 'treat' 'try' 'typeswitch' 'union' 'unordered' 'validate' 'where' 'xquery'
+          << 'contains' 'paragraphs' 'sentences' 'times' 'words' 'after' 'as' 'before' 'copy' 'delete' 'first' 'insert' 'into' 'last' 'modify' 'rename' 'replace' 'with' 'private' 'ancestor' 'ancestor-or-self' 'and' 'ascending' 'attribute' 'binary' 'catch' 'case' 'cast' 'castable' 'child' 'collation' 'comment' 'count' 'declare' 'default' 'descendant' 'descendant-or-self' 'descending' 'div' 'document' 'document-node' 'element' 'else' 'empty' 'empty-sequence' 'end' 'eq' 'every' 'except' 'following' 'following-sibling' 'for' 'function' 'ge' 'group' 'gt' 'idiv' 'if' 'import' 'instance' 'intersect' 'is' 'item' 'le' 'let' 'lt' 'mod' 'module' 'namespace' 'namespace-node' 'ne' 'node' 'only' 'or' 'order' 'ordered' 'parent' 'preceding' 'preceding-sibling' 'processing-instruction' 'property' 'return' 'satisfies' 'schema-attribute' 'schema-element' 'self' 'some' 'stable' 'start' 'switch' 'text' 'to' 'treat' 'try' 'typeswitch' 'union' 'unordered' 'validate' 'where' 'xquery'
 NCName^Token
-          << 'try' 'and' 'ascending' 'case' 'cast' 'castable' 'collation' 'count' 'default' 'descending' 'div' 'else' 'empty' 'end' 'eq' 'except' 'for' 'ge' 'group' 'gt' 'idiv' 'instance' 'intersect' 'is' 'le' 'let' 'lt' 'mod' 'ne' 'only' 'or' 'order' 'return' 'satisfies' 'stable' 'start' 'to' 'treat' 'union' 'where'
+          << 'contains' 'paragraphs' 'sentences' 'times' 'words' 'after' 'as' 'before' 'into' 'modify' 'with' 'try' 'and' 'ascending' 'case' 'cast' 'castable' 'collation' 'count' 'default' 'descending' 'div' 'else' 'empty' 'end' 'eq' 'except' 'for' 'ge' 'group' 'gt' 'idiv' 'instance' 'intersect' 'is' 'le' 'let' 'lt' 'mod' 'ne' 'only' 'or' 'order' 'return' 'satisfies' 'stable' 'start' 'to' 'treat' 'union' 'where'

@@ -2,12 +2,12 @@
    
 # xqueryparser.xq  
 
-An parser for XQuery 3.0 and MarkLogic extensions.
+A parser for XQuery 3.0, XQuery Update, XQuery Full Text, and MarkLogic XQuery extensions.
      
 
 
 Author:  John Snelson    Feb 17, 2012   
-Version:  0.1 
+Version:  0.2 
 
 ## Table of Contents
 

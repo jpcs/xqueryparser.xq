@@ -21,4 +21,9 @@ declare function bar()
 {
   e/@a, descendant::e/attribute::a
 };
+(: blah blah :)
+declare function (: blah :) baz()
+{
+  e contains text 'fred'
+};
 ")
